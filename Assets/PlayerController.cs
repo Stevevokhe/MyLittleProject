@@ -12,26 +12,35 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     CapsuleCollider2D capsuleCollider;
     [SerializeField]
-    BoxCollider2D groundDetector;
-    [SerializeField]
     float speed = 3.4f;
     [SerializeField]
-    float jumpHeight = 6.5f;
-    [SerializeField]
-    float gravityScale = 1.5f;
+    float jumpHeight = 50.0f;
     [SerializeField]
     public Camera mainCamera;
+    [SerializeField]
+    SpriteRenderer image;
+    [SerializeField]
+    private Vector3 groundCheckerPosition = Vector3.zero;
+    [SerializeField]
+    private Vector2 groundCheckerSize = new(.9f, .1f);
 
+    int colliding = 0;
+    int airJumpCount = 0;
+    Vector3 movement;
+    [SerializeField]
+    LayerMask groundLayer;
     Transform t;
+    Transform StartPosition;
     bool facingRight;
     Vector3 cameraPos;
+    [SerializeField]
     bool isGrounded = false;
     void Start()
     {
         t = transform;
+        StartPosition = t;
         rigidbodyPlayer.freezeRotation = true;
         rigidbodyPlayer.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        rigidbodyPlayer.gravityScale = gravityScale;
         facingRight = t.localScale.x > 0;
 
         if (mainCamera)
@@ -43,51 +52,68 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Movement controls
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+        if (Input.GetKey(KeyCode.D))
         {
-            if(Input.GetKey(KeyCode.A))
-            {
-                facingRight = false;
-                t.localScale = new Vector3(-Mathf.Abs(t.localScale.x), t.localScale.y, t.localScale.z);
-            }
-            else {
-                facingRight = true;
-                t.localScale = new Vector3(Mathf.Abs(t.localScale.x), t.localScale.y, transform.localScale.z);
-            }
+            facingRight = true;
+            movement = new Vector3(speed, 0f, 0f);
         }
-              
 
+        if (Input.GetKey(KeyCode.A))
+        {
+            facingRight = false;
+            movement = new Vector3(-speed, 0f, 0f);
+        }
+       
         if (mainCamera)
         {
             mainCamera.transform.position = new Vector3(t.position.x, cameraPos.y, cameraPos.z);
         }
+
+        if (isGrounded || airJumpCount > 0)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                rigidbodyPlayer.AddForce(new Vector2(0f, jumpHeight), ForceMode2D.Impulse);
+                airJumpCount--;
+            }
+        }
+        
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            transform.position = StartPosition.position;
+        }
+        ChangeFacing();
+        GroundCheck();
     }
+
+    private void ChangeFacing()
+    {
+        if (!facingRight)
+        {
+            image.gameObject.transform.localScale = new Vector3(-1,1,0);
+        } else
+        {
+            image.gameObject.transform.localScale = new Vector3(1, 1, 0);
+        }
+    }
+
+    void GroundCheck()
+    {
+        bool overlap = Physics2D.OverlapBox(transform.position + groundCheckerPosition, groundCheckerSize, 0, groundLayer);
+
+        isGrounded = overlap;
+        if (isGrounded)
+        {
+            airJumpCount = 2;
+        }
+    }
+
+
 
     void FixedUpdate()
     {
-        if (groundDetector.gameObject.layer == 3)
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-        if (Input.GetKeyDown(KeyCode.W) && isGrounded)
-        {
-
-            rigidbodyPlayer.velocity = new Vector2(rigidbodyPlayer.velocity.x, jumpHeight);
-        }
-
-        if (facingRight)
-        {
-            this.GameObject.
-        }
-
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
-        {
-            rigidbodyPlayer.velocity = new Vector2(speed, rigidbodyPlayer.velocity.y);
-        }
+        transform.position += movement * Time.deltaTime;
+        movement = Vector3.zero;        
     }
 }
