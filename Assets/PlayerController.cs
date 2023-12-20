@@ -19,17 +19,14 @@ public class PlayerController : MonoBehaviour
     public Camera mainCamera;
     [SerializeField]
     SpriteRenderer image;
-    [SerializeField]
-    private Vector3 groundCheckerPosition = Vector3.zero;
-    [SerializeField]
-    private Vector2 groundCheckerSize = new(.9f, .1f);
 
-    int colliding = 0;
     int airJumpCount = 0;
     Vector3 movement;
     [SerializeField]
     LayerMask groundLayer;
     Transform t;
+    List<Collider2D> groundColliders;
+
     Transform StartPosition;
     bool facingRight;
     Vector3 cameraPos;
@@ -39,9 +36,7 @@ public class PlayerController : MonoBehaviour
     {
         t = transform;
         StartPosition = t;
-        rigidbodyPlayer.freezeRotation = true;
-        rigidbodyPlayer.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        facingRight = t.localScale.x > 0;
+        groundColliders = new List<Collider2D>();
 
         if (mainCamera)
         {
@@ -84,7 +79,6 @@ public class PlayerController : MonoBehaviour
             transform.position = StartPosition.position;
         }
         ChangeFacing();
-        GroundCheck();
     }
 
     private void ChangeFacing()
@@ -98,15 +92,37 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void GroundCheck()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        bool overlap = Physics2D.OverlapBox(transform.position + groundCheckerPosition, groundCheckerSize, 0, groundLayer);
-
-        isGrounded = overlap;
-        if (isGrounded)
+        if((groundLayer.value & (1 << collision.transform.gameObject.layer)) > 0)
         {
+            if (!groundColliders.Contains(collision))
+            {
+                groundColliders.Add(collision);
+            }
+            
             airJumpCount = 2;
         }
+
+        if (collision.CompareTag("Platform"))
+            transform.parent = collision.transform;
+        isGrounded = true;
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if ((groundLayer.value & (1 << collision.transform.gameObject.layer)) > 0)
+        {
+            if (groundColliders.Contains(collision))
+            {
+                groundColliders.Remove(collision);
+            }
+            if (groundColliders.Count == 0)
+                isGrounded = false;
+        }
+
+        if (collision.CompareTag("Platform"))
+            transform.parent = null;
     }
 
 
