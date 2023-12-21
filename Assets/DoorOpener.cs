@@ -10,23 +10,31 @@ public class DoorOpener : MonoBehaviour
     [SerializeField]
     GameObject DoorOpenerText;
 
-    bool canOpened = false;
-    // Update is called once per frame
-    void Update()
+    bool canOpened = true;
+
+    private SpriteRenderer doorSprite;
+
+    private void Start()
     {
-        if (Input.GetKey(KeyCode.F) && canOpened)
-        {
-            Door.SetActive(false);
-            DoorOpenerText.SetActive(false);
-        }
+        doorSprite = GetComponent<SpriteRenderer>();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public void OpenDoor()
     {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            canOpened = true;
-            DoorOpenerText.SetActive(true);
-        }
+        doorSprite.color = Color.green;
+            Door.SetActive(false);
+            DoorOpenerText.SetActive(false);
+            canOpened = false;
+    }
+
+    public void ShowText()
+    {
+        if(canOpened)
+        DoorOpenerText.SetActive(true);
+    }
+
+    public void HideText()
+    {
+        DoorOpenerText.SetActive(false);
     }
 }

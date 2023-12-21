@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Platform
+  - DoorOpener
+  - Enemy
+  - BFG9000
   layers:
   - Default
   - TransparentFX
