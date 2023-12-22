@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float speed = 3.4f;
     [SerializeField] float jumpHeight = 50.0f;
     [SerializeField] public Camera mainCamera;
+    [SerializeField] float cameraOffset;
     [SerializeField] SpriteRenderer image;
     [SerializeField] bool isGrounded = false;
 
@@ -33,22 +34,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float BFGfireDelay = 3f;
     private float fireTimer;
     bool hasBFG;
+    
 
-    bool facingRight;
-
-    Vector3 cameraPos;
+    public bool facingRight;
 
 
     private bool canMove;
+    private bool canFire;
     void Start()
     {
         t = transform;
         groundColliders = new List<Collider2D>();
-        canMove = true;
-        if (mainCamera)
-        {
-            cameraPos = mainCamera.transform.position;
-        }
+        canMove = false;
+        facingRight = true;
     }
 
     // Update is called once per frame
@@ -70,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
             if (mainCamera)
             {
-                mainCamera.transform.position = new Vector3(t.position.x, cameraPos.y, cameraPos.z);
+                mainCamera.transform.position = new Vector3(t.position.x, t.position.y+cameraOffset, mainCamera.transform.position.z);
             }
 
             if (isGrounded || airJumpCount > 0)
@@ -82,32 +80,32 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            if (Input.GetKey(KeyCode.Space))
-            {
-
-                if (hasBFG)
-                {
-                    if (fireTimer >= BFGfireDelay)
-                    {
-
-                        Instantiate(BFGbullet, firingpoint.position, Quaternion.identity).Setup(facingRight);
-                        fireTimer = 0;
-                    }
-                }
-                else
-                {
-                    if (fireTimer >= fireDelay)
-                    {
-                        Instantiate(bullet, firingpoint.position, Quaternion.identity).Setup(facingRight);
-                        fireTimer = 0;
-                    }
-                }
-
-
-            }
+            
 
             if (Input.GetKeyDown(KeyCode.F) && doorOpener)
                 doorOpener.OpenDoor();
+        }
+
+        if (Input.GetKey(KeyCode.Space) && canFire)
+        {
+
+            if (hasBFG)
+            {
+                if (fireTimer >= BFGfireDelay)
+                {
+                    StartCoroutine(BFGFire());
+                    Instantiate(BFGbullet, firingpoint.position, Quaternion.identity).SetupBullet(facingRight);
+                    fireTimer = 0;
+                }
+            }
+            else
+            {
+                if (fireTimer >= fireDelay)
+                {
+                    Instantiate(bullet, firingpoint.position, Quaternion.identity).SetupBullet(facingRight);                    
+                    fireTimer = 0;
+                }
+            }
         }
 
 
@@ -136,6 +134,13 @@ public class PlayerController : MonoBehaviour
         rigidbodyPlayer.constraints = RigidbodyConstraints2D.None;
         yield return new WaitForSeconds(3f);
         ResetLevel();
+    }
+
+    private IEnumerator BFGFire()
+    {
+        Time.timeScale = 0.2f;
+        yield return new WaitForSeconds(0.1f);
+        Time.timeScale = 1f;
     }
 
 
@@ -214,9 +219,18 @@ public class PlayerController : MonoBehaviour
             doorOpener = null;
         }
 
+        if (collision.CompareTag("Finish"))
+        {
+            SceneManager.LoadScene("Victory");
+        }
+
     }
 
-
+    public void enablePlaymode()
+    {
+        canMove = true;
+        canFire = true;
+    }
 
 
 }

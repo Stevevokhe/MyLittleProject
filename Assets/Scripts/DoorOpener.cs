@@ -5,12 +5,14 @@ using UnityEngine;
 public class DoorOpener : MonoBehaviour
 {
 
-    [SerializeField]
-    GameObject Door;
+    [SerializeField] GameObject Door;
+    [SerializeField] Transform endPoint;
+    [SerializeField] float speed;
     [SerializeField]
     GameObject DoorOpenerText;
 
     bool canOpened = true;
+    bool canMove = false;
 
     private SpriteRenderer doorSprite;
 
@@ -19,10 +21,18 @@ public class DoorOpener : MonoBehaviour
         doorSprite = GetComponent<SpriteRenderer>();
     }
 
+    private void Update()
+    {
+        if (canMove)
+        {           
+           MoveDoor(endPoint);            
+        }
+    }
+
     public void OpenDoor()
     {
         doorSprite.color = Color.green;
-            Door.SetActive(false);
+        canMove = true;
             DoorOpenerText.SetActive(false);
             canOpened = false;
     }
@@ -36,5 +46,13 @@ public class DoorOpener : MonoBehaviour
     public void HideText()
     {
         DoorOpenerText.SetActive(false);
+    }
+
+    private void MoveDoor(Transform target)
+    {
+        Door.transform.position = Vector3.MoveTowards(Door.transform.position,
+            target.transform.position, speed * Time.deltaTime);
+        if (Vector3.Distance(Door.transform.position, target.position) < 0.1f)        
+            canMove = false;
     }
 }

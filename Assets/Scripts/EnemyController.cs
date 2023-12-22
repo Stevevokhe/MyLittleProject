@@ -7,6 +7,8 @@ public class EnemyController : MonoBehaviour
     [SerializeField]
     float speed = 3.4f;
     [SerializeField]
+    float health = 5.0f;
+    [SerializeField]
     LayerMask groundLayer;
     [SerializeField]
     Transform groundChecker;
@@ -15,7 +17,7 @@ public class EnemyController : MonoBehaviour
 
     private Rigidbody2D rb;
     private bool facingRight;
-    private bool canMove = true;
+    private bool canMove=true;
     Vector3 movement;
 
     void Start()
@@ -29,10 +31,15 @@ public class EnemyController : MonoBehaviour
         movement = new Vector3(facingRight ? speed : -speed, 0, 0);
 
         Vector3 groundDirection = groundChecker.position - transform.position;
+        Vector3 wallDirection = facingRight? transform.right : -transform.right;
 
         RaycastHit2D groundHit = Physics2D.Raycast(transform.position, groundDirection, groundDirection.magnitude, groundLayer);
+        RaycastHit2D wallHit = Physics2D.Raycast(transform.position, wallDirection, 1.0f, groundLayer);
 
-        if (groundHit.collider == null)
+        Debug.DrawLine(transform.position, groundChecker.position, Color.yellow);
+        Debug.DrawRay(transform.position, wallDirection, Color.yellow);
+
+        if (groundHit.collider == null || wallHit.collider !=null)
         {
             if (facingRight)
             {
@@ -65,4 +72,12 @@ public class EnemyController : MonoBehaviour
         canMove = false;
         text.SetActive(true);
     }
+
+    public void getDamage(float damage)
+    {
+        health -= damage;
+        if (health <= 0)
+            Destroy(this.gameObject);
+    }
+
 }
